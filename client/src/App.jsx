@@ -3,6 +3,10 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
+
+import Home from './pages/Home';
+import Listings from './pages/Listings';
+import Contact from './pages/Contact';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
@@ -28,7 +32,9 @@ function App() {
           <Route element={<PublicLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={<Login />} /> {/* Default to Login for now */}
+            <Route path="/" element={<Home />} />
+            <Route path="/listings" element={<Listings />} />
+            <Route path="/contact" element={<Contact />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
