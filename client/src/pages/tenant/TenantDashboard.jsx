@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { Loader2, Home, CreditCard, History, DollarSign, Wrench } from 'lucide-react';
+import { Loader2, Home, CreditCard, History, DollarSign, Wrench, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import MaintenanceList from '../../components/MaintenanceList';
 
@@ -156,6 +156,27 @@ const TenantDashboard = () => {
                     </Link>
                 </div>
                 <MaintenanceList isLandlord={false} />
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white shadow rounded-lg p-6 mt-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link
+                        to="/tenant/rate-property"
+                        className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700"
+                    >
+                        <Star className="h-4 w-4 mr-2" />
+                        Rate Property
+                    </Link>
+                    <Link
+                        to="/tenant/maintenance"
+                        className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                    >
+                        <Wrench className="h-4 w-4 mr-2" />
+                        Request Maintenance
+                    </Link>
+                </div>
             </div>
         </div>
     );

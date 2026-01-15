@@ -21,6 +21,7 @@ import AssignTenant from './pages/landlord/AssignTenant';
 import VerificationPage from './pages/landlord/VerificationPage';
 import TenantDashboard from './pages/tenant/TenantDashboard';
 import MaintenanceRequestForm from './pages/tenant/MaintenanceRequestForm';
+import RateProperty from './pages/tenant/RateProperty';
 import PublicLayout from './components/PublicLayout';
 import DashboardLayout from './components/DashboardLayout';
 
@@ -70,6 +71,7 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/tenant" element={<TenantDashboard />} />
               <Route path="/tenant/maintenance/new" element={<MaintenanceRequestForm />} />
+              <Route path="/tenant/rate-property" element={<RateProperty />} />
             </Route>
           </Route>
 
