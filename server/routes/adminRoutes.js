@@ -3,7 +3,9 @@ const router = express.Router();
 const {
     getSystemStats,
     getAllUsers,
-    updateUserStatus,
+    createUser,
+    deleteUser,
+    updateUser,
     getPendingProperties,
     updatePropertyStatus,
 } = require('../controllers/adminController');
@@ -13,8 +15,14 @@ router.use(protect);
 router.use(admin);
 
 router.get('/stats', getSystemStats);
-router.get('/users', getAllUsers);
-router.put('/users/:id', updateUserStatus);
+router.route('/users')
+    .get(getAllUsers)
+    .post(createUser);
+
+router.route('/users/:id')
+    .put(updateUser)
+    .delete(deleteUser);
+
 router.get('/properties/pending', getPendingProperties);
 router.put('/properties/:id/status', updatePropertyStatus);
 
