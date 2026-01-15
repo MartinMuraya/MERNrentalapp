@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
+import AllProperties from './pages/admin/AllProperties';
 
 import LandlordDashboard from './pages/landlord/LandlordDashboard';
 import MyProperties from './pages/landlord/MyProperties';
@@ -49,6 +50,7 @@ function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/properties" element={<PropertyApprovals />} />
+              <Route path="/admin/properties/all" element={<AllProperties />} />
             </Route>
           </Route>
 

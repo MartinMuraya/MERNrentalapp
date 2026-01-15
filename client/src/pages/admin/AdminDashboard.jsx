@@ -102,6 +102,9 @@ const AdminDashboard = () => {
                         <Link to="/admin/properties" className="block w-full text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
                             Review Property Listings
                         </Link>
+                        <Link to="/admin/properties/all" className="block w-full text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                            Manage All Properties
+                        </Link>
                     </div>
                 </div>
                 <div className="bg-white shadow rounded-lg p-6">

@@ -184,6 +184,76 @@ const updatePropertyStatus = async (req, res) => {
     }
 };
 
+// @desc    Get all properties (for admin)
+// @route   GET /api/admin/properties/all
+// @access  Private/Admin
+const getAllProperties = async (req, res) => {
+    try {
+        const properties = await Property.find({}).populate('landlordId', 'name email').sort({ createdAt: -1 });
+        res.json(properties);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update any property (admin)
+// @route   PUT /api/admin/properties/:id
+// @access  Private/Admin
+const updateAnyProperty = async (req, res) => {
+    const { title, description, location, amenities, status } = req.body;
+
+    try {
+        const property = await Property.findById(req.params.id);
+
+        if (property) {
+            property.title = title || property.title;
+            property.description = description || property.description;
+            property.location = location || property.location;
+            property.amenities = amenities || property.amenities;
+            property.status = status || property.status;
+
+            const updatedProperty = await property.save();
+
+            await ActivityLog.create({
+                userId: req.user._id,
+                action: 'ADMIN_UPDATE_PROPERTY',
+                details: `Admin updated property ${updatedProperty.title}`
+            });
+
+            res.json(updatedProperty);
+        } else {
+            res.status(404).json({ message: 'Property not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Delete any property (admin)
+// @route   DELETE /api/admin/properties/:id
+// @access  Private/Admin
+const deleteAnyProperty = async (req, res) => {
+    try {
+        const property = await Property.findById(req.params.id);
+
+        if (property) {
+            await property.deleteOne();
+
+            await ActivityLog.create({
+                userId: req.user._id,
+                action: 'ADMIN_DELETE_PROPERTY',
+                details: `Admin deleted property ${property.title}`
+            });
+
+            res.json({ message: 'Property removed' });
+        } else {
+            res.status(404).json({ message: 'Property not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = {
     getSystemStats,
     getAllUsers,
@@ -192,4 +262,7 @@ module.exports = {
     updateUser,
     getPendingProperties,
     updatePropertyStatus,
+    getAllProperties,
+    updateAnyProperty,
+    deleteAnyProperty,
 };

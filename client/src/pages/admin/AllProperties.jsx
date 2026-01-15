@@ -1,28 +1,32 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { Home, MapPin, Loader2, Edit2, Trash2, X } from 'lucide-react';
+import { Loader2, Edit2, Trash2, X, Filter } from 'lucide-react';
 
-const MyProperties = () => {
+const AllProperties = () => {
     const { user } = useAuth();
     const [properties, setProperties] = useState([]);
+    const [filteredProperties, setFilteredProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('all');
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         location: '',
-        amenities: ''
+        amenities: '',
+        status: 'pending'
     });
     const [formError, setFormError] = useState('');
 
     const fetchProperties = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const { data } = await axios.get('/api/properties/my', config);
+            // Admin should see ALL properties, not just pending
+            const { data } = await axios.get('/api/admin/properties/all', config);
             setProperties(data);
+            setFilteredProperties(data);
         } catch (error) {
             console.error("Error fetching properties", error);
         } finally {
@@ -34,6 +38,14 @@ const MyProperties = () => {
         fetchProperties();
     }, [user.token]);
 
+    useEffect(() => {
+        if (statusFilter === 'all') {
+            setFilteredProperties(properties);
+        } else {
+            setFilteredProperties(properties.filter(p => p.status === statusFilter));
+        }
+    }, [statusFilter, properties]);
+
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -44,7 +56,8 @@ const MyProperties = () => {
             title: property.title,
             description: property.description,
             location: property.location,
-            amenities: property.amenities?.join(', ') || ''
+            amenities: property.amenities?.join(', ') || '',
+            status: property.status
         });
         setFormError('');
         setModalOpen(true);
@@ -61,7 +74,8 @@ const MyProperties = () => {
                 amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a)
             };
 
-            await axios.put(`/api/properties/${editingProperty._id}`, updateData, config);
+            // Admin uses different endpoint to update any property
+            await axios.put(`/api/admin/properties/${editingProperty._id}`, updateData, config);
             setModalOpen(false);
             fetchProperties();
         } catch (error) {
@@ -70,11 +84,11 @@ const MyProperties = () => {
     };
 
     const handleDelete = async (id, title) => {
-        if (!window.confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) return;
+        if (!window.confirm(`Are you sure you want to delete "${title}"? This will also remove all associated units and leases.`)) return;
 
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            await axios.delete(`/api/properties/${id}`, config);
+            await axios.delete(`/api/admin/properties/${id}`, config);
             fetchProperties();
         } catch (error) {
             console.error("Delete failed", error);
@@ -82,71 +96,96 @@ const MyProperties = () => {
         }
     };
 
-    if (loading) return <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>;
+    if (loading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">My Properties</h1>
-                <Link to="/landlord/properties/add" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    Add New
-                </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.map((property) => (
-                    <div key={property._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                        <div className="h-48 bg-gray-200 flex items-center justify-center">
-                            <Home className="h-12 w-12 text-gray-400" />
-                        </div>
-                        <div className="p-4 space-y-2">
-                            <div className="flex justify-between items-start">
-                                <h3 className="text-lg font-bold text-gray-900 truncate">{property.title}</h3>
-                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${property.status === 'approved' ? 'bg-green-100 text-green-800' : property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                                    {property.status}
-                                </span>
-                            </div>
-                            <div className="flex items-center text-sm text-gray-500">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {property.location}
-                            </div>
-                            <p className="text-sm text-gray-600 line-clamp-2">{property.description}</p>
-
-                            <div className="pt-4 flex justify-between items-center border-t border-gray-100 mt-4">
-                                <span className="text-sm font-medium text-gray-600">{property.units.length} Units</span>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => openEditModal(property)}
-                                        className="text-gray-400 hover:text-blue-600 transition-colors"
-                                        title="Edit Property"
-                                    >
-                                        <Edit2 size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(property._id, property.title)}
-                                        className="text-gray-400 hover:text-red-600 transition-colors"
-                                        title="Delete Property"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                    <Link
-                                        to={`/landlord/properties/${property._id}`}
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                    >
-                                        Manage Units →
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {properties.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">You don't have any properties listed.</p>
+        <div className="bg-white shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+                <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">All Properties</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-gray-500">Manage all properties in the system</p>
                 </div>
-            )}
+                <div className="flex items-center space-x-2">
+                    <Filter className="h-4 w-4 text-gray-400" />
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="border border-gray-300 rounded-md shadow-sm py-1 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className="border-t border-gray-200">
+                {filteredProperties.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">No properties found.</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Landlord</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {filteredProperties.map((property) => (
+                                    <tr key={property._id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{property.title}</div>
+                                            <div className="text-sm text-gray-500 truncate max-w-xs">{property.description}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {property.location}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{property.landlordId?.name || 'N/A'}</div>
+                                            <div className="text-sm text-gray-500">{property.landlordId?.email || 'N/A'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {property.units?.length || 0}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${property.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                    property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-red-100 text-red-800'
+                                                }`}>
+                                                {property.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div className="flex items-center justify-end space-x-3">
+                                                <button
+                                                    onClick={() => openEditModal(property)}
+                                                    className="text-gray-400 hover:text-blue-600 transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(property._id, property.title)}
+                                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
 
             {/* Edit Modal */}
             {modalOpen && (
@@ -225,6 +264,20 @@ const MyProperties = () => {
                                         />
                                     </div>
 
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Status</label>
+                                        <select
+                                            name="status"
+                                            value={formData.status}
+                                            onChange={handleInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        >
+                                            <option value="pending">Pending</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                    </div>
+
                                     <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                                         <button
                                             type="submit"
@@ -250,4 +303,4 @@ const MyProperties = () => {
     );
 };
 
-export default MyProperties;
+export default AllProperties;

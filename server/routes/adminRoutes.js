@@ -8,6 +8,9 @@ const {
     updateUser,
     getPendingProperties,
     updatePropertyStatus,
+    getAllProperties,
+    updateAnyProperty,
+    deleteAnyProperty,
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -23,7 +26,11 @@ router.route('/users/:id')
     .put(updateUser)
     .delete(deleteUser);
 
+router.get('/properties/all', getAllProperties);
 router.get('/properties/pending', getPendingProperties);
 router.put('/properties/:id/status', updatePropertyStatus);
+router.route('/properties/:id')
+    .put(updateAnyProperty)
+    .delete(deleteAnyProperty);
 
 module.exports = router;
