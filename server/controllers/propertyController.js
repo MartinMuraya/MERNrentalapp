@@ -2,7 +2,40 @@ const Property = require('../models/Property');
 const ActivityLog = require('../models/ActivityLog');
 const Lease = require('../models/Lease');
 const User = require('../models/User');
+const Rating = require('../models/Rating');
 const generateShortId = require('../utils/generateShortId');
+
+// @desc    Get public listings (approved properties with ratings)
+// @route   GET /api/properties/public
+// @access  Public
+const getPublicListings = async (req, res) => {
+    try {
+        const properties = await Property.find({ status: 'approved' })
+            .populate('landlordId', 'name')
+            .sort({ createdAt: -1 });
+
+        // Calculate average rating for each property
+        const propertiesWithRatings = await Promise.all(
+            properties.map(async (property) => {
+                const ratings = await Rating.find({ propertyId: property._id });
+                const avgRating = ratings.length > 0
+                    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+                    : 0;
+
+                return {
+                    ...property.toObject(),
+                    averageRating: avgRating.toFixed(1),
+                    totalRatings: ratings.length
+                };
+            })
+        );
+
+        res.json(propertiesWithRatings);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 // @desc    Create a new property
 // @route   POST /api/properties
@@ -236,6 +269,7 @@ const generateInvite = async (req, res) => {
 };
 
 module.exports = {
+    getPublicListings,
     createProperty,
     getMyProperties,
     getPropertyById,

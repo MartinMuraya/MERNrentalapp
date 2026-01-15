@@ -18,7 +18,8 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/properties', require('./routes/propertyRoutes'));
 app.use('/api/tenant', require('./routes/tenantRoutes'));
 app.use('/api/maintenance', require('./routes/maintenanceRoutes'));
-app.use('/api/contact', require('./routes/contactRoutes')); // [NEW]
+app.use('/api/contact', require('./routes/contactRoutes'));
+app.use('/api/ratings', require('./routes/ratingRoutes')); // [NEW]
 
 // Basic Route
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+    getPublicListings,
     createProperty,
     getMyProperties,
     getPropertyById,
@@ -9,6 +10,9 @@ const {
     assignTenant,
 } = require('../controllers/propertyController');
 const { protect, landlord, verified } = require('../middleware/authMiddleware');
+
+// Public route
+router.get('/public', getPublicListings);
 
 router.route('/')
     .post(protect, landlord, verified, createProperty);

@@ -52,5 +52,13 @@ const verified = (req, res, next) => {
     }
 };
 
-module.exports = { protect, admin, landlord, verified };
+const tenant = (req, res, next) => {
+    if (req.user && req.user.role === 'tenant') {
+        next();
+    } else {
+        res.status(401).json({ message: 'Not authorized as a tenant' });
+    }
+};
+
+module.exports = { protect, admin, landlord, verified, tenant };
 
